@@ -1,6 +1,7 @@
 import cv2
 from .Tex import *
 from .Camera import *
+import random
 
 class World:
     def __init__(self, size, winName="CubeSim"):
@@ -14,4 +15,5 @@ class World:
         copArr = self.arr.copy()
         for tex in self.textures:
             tex.update(copArr, self.cam)
+
         cv2.imshow(self.winName, copArr)

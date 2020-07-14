@@ -4,8 +4,8 @@ from math import pi
 import numpy as np
 
 class Camera:
-    def __init__(self, pos=np.array([0, 0, 20], np.float64),
-                angle=np.array([0, pi, 0], np.float64), e=np.array([0, 0, 300], np.float64)):
+    def __init__(self, pos=np.array([0, 0, 45], np.float64),
+                angle=np.array([0, pi, 0], np.float64), e=np.array([0, 0, 500], np.float64)):
         self.pos = pos
         self.angle = angle
         self.e = e
