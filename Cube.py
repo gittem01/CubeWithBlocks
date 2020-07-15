@@ -3,14 +3,10 @@ from smollEngine.Tex import *
 import random
 
 class Cube:
-    def __init__(self, world, size=10, data=None):
+    def __init__(self, world, size=125, data=None):
         self.world = world
         self.size = size
-
-        if data == None:
-            self.data = [[], [], [], [], [], []]
-        else:
-            self.data = data
+        self.data = [[], [], [], [], [], []]
 
         self.dict = {   "bl": [255, 0,   0],
                         "re": [0,   0,   255],
@@ -28,6 +24,18 @@ class Cube:
 
         self.directions = np.array([    [ 1,  1, 0], [ 1, 0, -1], [0,  1, -1],
                                         [-1, -1, 0], [-1, 0,  1], [0, -1, 1]])
+
+        self.cornerSides = [ [0, 1, 2], [0, 1, 5], [1, 2, 3], [1, 3, 5],
+                             [0, 2, 4], [0, 4, 5], [2, 3, 4], [3, 4, 5] ]
+
+        self.cornerIncrements = [ [0, 0, 0], [1, 0, 0], [0, 0, -1], [1, 0, -1],
+                                  [0, 1, 0], [1, 1, 0], [0, 1, -1], [1, 1, -1] ]
+
+        self.lastCornerPositions = self.getCorners()
+
+        self.angle = np.array([0, 0], dtype=np.float64)
+        self.willBeRendered = self.getNearestSides()
+
         nz = np.nonzero(self.directions)
         self.nonZeros = nz[1].reshape(-1, 2)
         self.createTextures()
@@ -45,8 +53,9 @@ class Cube:
 
     def createTextures(self, file="cubeData01.csv"):
         file = open(file, "r")
+        lines = file.readlines()
         for i in range(6):
-            line = file.readline()[:-1].replace(" ", "")
+            line = lines[i][:-1].replace(" ", "")
             res = list(map(lambda x: self.dict[x], line.split(",")))
             val = np.array([0, 0, 0])
             for j in range(3):
@@ -54,15 +63,78 @@ class Cube:
                 for k in range(3):
                     pos = self.starts[i//3] + val*self.size
                     tex = self.createTexFromPos(pos, i, res[j*3+k])
-                    self.world.textures.append(tex)
                     self.data[i].append(tex)
                     val[self.nonZeros[i][0]] += self.directions[i][self.nonZeros[i][0]]
                 val[self.nonZeros[i][1]] += self.directions[i][self.nonZeros[i][1]]
 
-    def getData(self, file):
+    def getRotationarrays(self, angley, anglex):
+        arrY = np.array(
+            [
+                [ cos(angley), 0, sin(angley)],
+                [ 0,           1, 0],
+                [-sin(angley), 0, cos(angley)]
+            ]
+        )
+        arrX = np.array(
+            [
+                [ 1, 0,            0],
+                [ 0, cos(anglex), -sin(anglex)],
+                [ 0, sin(anglex),  cos(anglex)]
+            ]
+        )
+        return (arrY, arrX)
 
-        for i in range(6):
-            line = file.readline()[:-1].replace(" ", "")
-            res = list(map(lambda x: self.dict[x], line.split(",")))
-            for color in res:
-                tx = Tex(None, color)
+    def fullRotate(self, angley, anglex):
+        self.angle += np.array((angley, anglex))
+        arrY, arrX = self.getRotationarrays(angley, anglex)
+        for dp in self.data:
+            for tx in dp:
+                for i in range(4):
+                    tx.points[i] = np.dot(tx.points[i], arrY)
+                    tx.points[i] = np.dot(tx.points[i], arrX)
+
+        for i in range(len(self.lastCornerPositions)):
+            self.lastCornerPositions[i] = np.dot(self.lastCornerPositions[i], arrY)
+            self.lastCornerPositions[i] = np.dot(self.lastCornerPositions[i], arrX)
+
+    def pointRotate(self, angley, anglex, point):
+        arrY, arrX = self.getRotationarrays(angley, anglex)
+        p = np.dot(point, arrY)
+        p = np.dot(p, arrX)
+        return p
+
+    def update(self, arr):
+        self.willBeRendered = self.getNearestSides()
+        for i in self.willBeRendered:
+            for j in range(9):
+                self.data[i][j].update(arr, self.world.cam)
+
+    def getCorners(self):
+        corners = []
+        for i in range(8):
+            c = self.starts[0] + np.array(self.cornerIncrements[i])*self.size*3
+            corners.append(c)
+        return corners
+
+    def getDistanceFromCam(self, corner):
+        swcp = self.world.cam.pos
+        dist = (swcp[0]-corner[0])**2 + (swcp[1]-corner[1])**2 + (swcp[2]-corner[2])**2
+        return dist
+
+    def getNearestCorner(self):
+        corners = self.getCorners()
+        corners = self.lastCornerPositions
+        nearest = 0
+        dist = float("inf")
+        for i in range(len(corners)):
+            currDist = self.getDistanceFromCam(corners[i])
+            if currDist < dist:
+                nearest = i
+                dist = currDist
+        #pos = self.world.cam.put(corners[nearest]) + np.array([800, 450])
+        #cv2.circle(self.world.arr, tuple(np.array(pos, dtype=np.int32)), 10, (255, 255, 255), -1)
+        return nearest
+
+    def getNearestSides(self):
+        nc = self.getNearestCorner()
+        return self.cornerSides[nc]

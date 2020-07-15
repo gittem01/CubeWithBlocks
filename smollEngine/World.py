@@ -8,12 +8,25 @@ class World:
         self.winName = winName
         self.size = size
         self.arr = np.zeros((size[1], size[0], 3), dtype=np.uint8)
+        cv2.namedWindow(winName)
+        cv2.setMouseCallback(winName, self.mouseCallback)
+        self.lastMouse = None
         self.cam = Camera()
-        self.textures = []
+        self.cube = None
+
+    def mouseCallback(self, event, x, y, d, e):
+        if self.lastMouse != None:
+            diff = [x-self.lastMouse[0], y-self.lastMouse[1]]
+            self.cube.fullRotate(-diff[0]/200, diff[1]/200)
+        if event == 1 or self.lastMouse != None:
+            self.lastMouse = [x, y]
+        if event == 4:
+            self.lastMouse = None
+
 
     def loop(self, key):
         copArr = self.arr.copy()
-        for tex in self.textures:
-            tex.update(copArr, self.cam)
+        if self.cube:
+            self.cube.update(copArr)
 
         cv2.imshow(self.winName, copArr)

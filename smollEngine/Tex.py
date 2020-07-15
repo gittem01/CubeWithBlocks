@@ -16,7 +16,7 @@ class Tex:
             if type(sp) != type(None):
                 drawPoints.append(sp + np.array([800, 450]))
         drawPoints = np.array(drawPoints, dtype=np.int32)
-        if len(drawPoints) == 0:
+        if len(drawPoints) != 4:
             return
         cv2.fillPoly(arr, [drawPoints], self.color)
         for i in range(len(drawPoints)):
