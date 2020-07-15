@@ -1,6 +1,5 @@
-import numpy as np
 from smollEngine.Tex import *
-import random
+import numpy as np
 
 class Cube:
     def __init__(self, world, size=125, data=None):
@@ -8,14 +7,14 @@ class Cube:
         self.size = size
         self.data = [[], [], [], [], [], []]
 
-        self.dict = {   "bl": [255, 0,   0],
+        self.dict = {   "bl": [255, 0,   0], # str to color values
                         "re": [0,   0,   255],
                         "gr": [0,   255, 0],
                         "or": [0,   128, 255],
                         "wh": [255, 255, 255],
                         "ye": [0,   255, 255]}
 
-        self.starts =   np.array(
+        self.starts =   np.array( # two opposite corners of the cube
                             [
                                 [-size*1.5, -size*1.5,  size*1.5],
                                 [ size*1.5,  size*1.5, -size*1.5]
@@ -131,8 +130,6 @@ class Cube:
             if currDist < dist:
                 nearest = i
                 dist = currDist
-        #pos = self.world.cam.put(corners[nearest]) + np.array([800, 450])
-        #cv2.circle(self.world.arr, tuple(np.array(pos, dtype=np.int32)), 10, (255, 255, 255), -1)
         return nearest
 
     def getNearestSides(self):

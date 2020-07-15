@@ -4,11 +4,10 @@ from math import pi
 import numpy as np
 
 class Camera:
-    def __init__(self, pos=np.array([0, 0, 500], np.float64),
-                angle=np.array([0, 0, 0], np.float64), e=np.array([0, 0, 500], np.float64)):
+    def __init__(self,  pos=np.array([0, 0, 500], np.float64),
+                        angle=np.array([0, 0, 0], np.float64)):
         self.pos = pos
         self.angle = angle
-        self.e = e
         self.update()
 
     def update(self):
@@ -30,10 +29,3 @@ class Camera:
         result = np.dot(result, self.array3)
         result = np.dot(result, array4)
         return np.array([result[0], result[1]])
-        if result[2] < 0:
-            return None
-        b = np.array([0, 0], dtype=np.float64)
-        b[0] = (self.e[2]/result[2])*result[0] + self.e[0]
-        b[1] = (self.e[2]/result[2])*result[1] + self.e[1]
-
-        return b

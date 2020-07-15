@@ -2,23 +2,21 @@ from smollEngine.World import *
 from Cube import *
 import time
 
-w = World((1600, 900))
+w = World((900, 900))
 
 c = Cube(w)
+c.fullRotate(pi/4, pi/4)
 w.cube = c
 
-val = 0
 while 1:
     st = time.time()
     key = cv2.waitKey(1)
     if key == ord("q"):
         break
-    if key == ord("m"):
-        val += 1
 
-    c.willBeRendered = c.cornerSides[val%8]
     w.loop(key)
+
     try:
-        print("FPS:", 1/(time.time()-st), end="\r")
+        print("FPS:", int(1/(time.time()-st))," "*10, end="\r")
     except:
         pass
